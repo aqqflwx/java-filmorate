@@ -18,6 +18,7 @@ public class UserController {
 
     @GetMapping
     public Collection<User> findAllUsers() {
+        log.info("Обработка запроса на поиск всех пользователей выполнена");
         return users.values();
     }
 
@@ -29,16 +30,19 @@ public class UserController {
         }
         user.setId(getNextId());
         users.put(user.getId(), user);
+        log.info("Добавление пользователя было успешно выполнено");
         return user;
     }
 
     @PutMapping
     public User update(@RequestBody User newUser) {
         if (newUser.getId() == null) {
+            log.warn("Указан некорректный ID пользователя для обновления");
             throw new ValidationException("ID пользователя не указан!");
         }
 
         if (!users.containsKey(newUser.getId())) {
+            log.warn("Ввёден несуществующий ID пользователя");
             throw new ValidationException("Пользователя с таким ID нет!");
         }
 
@@ -49,20 +53,25 @@ public class UserController {
 
     private void validateUser(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
+            log.warn("Было введено пустое поле email");
             throw new ValidationException("Email пользователя не должен быть пустым!");
         }
         if (!user.getEmail().contains("@")) {
+            log.warn("Был получен некорректный email - отсутствие @");
             throw new ValidationException("Email должен содержать символ @!");
         }
 
         if (user.getLogin() == null || user.getLogin().isBlank()) {
+            log.warn("В request отсутствует логин пользователя");
             throw new ValidationException("Логин пользователя отсутствует!");
         }
         if (user.getLogin().contains(" ")) {
+            log.warn("Был введен некорректный логин пользователя: содержание пробелов");
             throw new ValidationException("Логин не должен содержать пробелы!");
         }
 
         if (user.getBirthday().isAfter(LocalDate.now())) {
+            log.warn("Была получена дата, которая еще не наступила на текущий момент");
             throw new ValidationException("Дата рождения не может быть в будущем!");
         }
     }
