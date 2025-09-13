@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -23,7 +24,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User create(@RequestBody User user) {
+    public User create(@Valid @RequestBody User user) {
         validateUser(user);
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
@@ -35,7 +36,7 @@ public class UserController {
     }
 
     @PutMapping
-    public User update(@RequestBody User newUser) {
+    public User update(@Valid @RequestBody User newUser) {
         if (newUser.getId() == null) {
             log.warn("Указан некорректный ID пользователя для обновления");
             throw new ValidationException("ID пользователя не указан!");
@@ -48,6 +49,7 @@ public class UserController {
 
         validateUser(newUser);
         users.put(newUser.getId(), newUser);
+        log.info("Пользователь с ID: {} был обновлен", newUser.getId());
         return newUser;
     }
 
@@ -82,6 +84,7 @@ public class UserController {
                 .mapToLong(id -> id)
                 .max()
                 .orElse(0);
+        log.debug("Был сгенерирован новый ID для пользователя");
         return ++currentMaxId;
     }
 }

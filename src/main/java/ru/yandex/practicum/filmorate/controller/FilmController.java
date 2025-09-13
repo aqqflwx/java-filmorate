@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -24,7 +25,7 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film create(@RequestBody Film film) {
+    public Film create(@Valid @RequestBody Film film) {
         validateFilm(film);
         film.setId(getNextId());
         films.put(film.getId(), film);
@@ -33,7 +34,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@RequestBody Film newFilm) {
+    public Film update(@Valid @RequestBody Film newFilm) {
         if (newFilm.getId() == null) {
             log.warn("Указан некорректный ID фильма для обновления");
             throw new ValidationException("ID фильма не указан!");
@@ -51,24 +52,9 @@ public class FilmController {
     }
 
     private void validateFilm(Film film) {
-        if (film.getName() == null || film.getName().isBlank()) {
-            log.warn("Было введено пустое название фильма");
-            throw new ValidationException("Название фильма не может быть пустым!");
-        }
-
-        if (film.getDescription() == null || film.getDescription().length() > 200) {
-            log.warn("Было введено описание, состоящее из 200+ символов");
-            throw new ValidationException("Максимальная длина описания фильма 200 символов!");
-        }
-
-        if (film.getReleaseDate().isBefore(EARLIEST_RELEASE_DATE)) {
+        if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(EARLIEST_RELEASE_DATE)) {
             log.warn("Была введена невалидная дата (ранее дня рождения фильма)");
             throw new ValidationException("Дата релиза фильма должна быть позже 28.12.1895!");
-        }
-
-        if (film.getDuration() < 0) {
-            log.warn("Была введена неположительная продолжительность фильма");
-            throw new ValidationException("Продолжительность фильма должна быть положительным числом!");
         }
     }
 
@@ -78,6 +64,7 @@ public class FilmController {
                 .mapToLong(id -> id)
                 .max()
                 .orElse(0);
+        log.debug("Был сгенерирован новый ID для нового фильма");
         return ++currentMaxId;
     }
 
