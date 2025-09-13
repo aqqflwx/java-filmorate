@@ -9,7 +9,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public final class FilmorateApplication {
 
-    private FilmorateApplication() { }
+    private FilmorateApplication() {
+    }
 
     /**
      * Запуск приложения.
