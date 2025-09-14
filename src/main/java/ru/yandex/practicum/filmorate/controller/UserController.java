@@ -16,34 +16,19 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * REST-контроллер для операций с пользователями.
- */
 @RestController
 @RequestMapping("/users")
 @Slf4j
 public final class UserController {
 
-    /** Памятное хранилище пользователей. */
     private final Map<Long, User> users = new HashMap<>();
 
-    /**
-     * Вернуть всех пользователей.
-     *
-     * @return коллекция пользователей
-     */
     @GetMapping
     public Collection<User> findAllUsers() {
         log.info("Обработка запроса на поиск всех пользователей выполнена");
         return users.values();
     }
 
-    /**
-     * Создать пользователя.
-     *
-     * @param user тело запроса
-     * @return сохранённый пользователь
-     */
     @PostMapping
     public User create(@Valid @RequestBody final User user) {
         validateUser(user);
@@ -56,12 +41,6 @@ public final class UserController {
         return user;
     }
 
-    /**
-     * Обновить пользователя.
-     *
-     * @param newUser пользователь с обновлёнными данными
-     * @return обновлённый пользователь
-     */
     @PutMapping
     public User update(@Valid @RequestBody final User newUser) {
         if (newUser.getId() == null) {
@@ -81,10 +60,6 @@ public final class UserController {
         return newUser;
     }
 
-    /**
-     * Проверка бизнес-правил пользователя.
-     * @param user пользователь для проверки
-     */
     private void validateUser(final User user) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             log.warn("Пустое поле email");
@@ -111,10 +86,6 @@ public final class UserController {
         }
     }
 
-    /**
-     * Сгенерировать следующий идентификатор.
-     * @return следующий доступный идентификатор
-     */
     private long getNextId() {
         final long currentMaxId = users.keySet()
                 .stream()

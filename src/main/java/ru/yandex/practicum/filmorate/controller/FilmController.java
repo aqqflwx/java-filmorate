@@ -16,38 +16,22 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * REST-контроллер для операций с фильмами.
- */
 @RestController
 @RequestMapping("/films")
 @Slf4j
 public final class FilmController {
 
-    /** Самая ранняя допустимая дата релиза. */
     private static final LocalDate EARLIEST_RELEASE_DATE =
             LocalDate.of(1895, 12, 28);
 
-    /** Памятное хранилище фильмов. */
     private final Map<Long, Film> films = new HashMap<>();
 
-    /**
-     * Вернуть все фильмы.
-     *
-     * @return коллекция фильмов
-     */
     @GetMapping
     public Collection<Film> findAllFilms() {
         log.info("Обработка запроса на поиск всех фильмов выполнена");
         return films.values();
     }
 
-    /**
-     * Создать фильм.
-     *
-     * @param film тело запроса
-     * @return сохранённый фильм
-     */
     @PostMapping
     public Film create(@Valid @RequestBody final Film film) {
         validateFilm(film);
@@ -57,12 +41,6 @@ public final class FilmController {
         return film;
     }
 
-    /**
-     * Обновить фильм.
-     *
-     * @param newFilm фильм с обновлёнными данными
-     * @return обновлённый фильм
-     */
     @PutMapping
     public Film update(@Valid @RequestBody final Film newFilm) {
         if (newFilm.getId() == null) {
@@ -79,10 +57,6 @@ public final class FilmController {
         return newFilm;
     }
 
-    /**
-     * Проверка бизнес-правил фильма.
-     * @param film фильм для проверки
-     */
     private void validateFilm(final Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             log.warn("Пустое название фильма");
@@ -113,10 +87,6 @@ public final class FilmController {
         }
     }
 
-    /**
-     * Сгенерировать следующий идентификатор.
-     * @return следующий доступный идентификатор
-     */
     private long getNextId() {
         final long currentMaxId = films.keySet()
                 .stream()
