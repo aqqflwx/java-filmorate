@@ -6,7 +6,9 @@ import java.util.Collection;
 
 public interface UserStorage {
     User create(final User user);
+
     User update(final User newUser);
+
     Collection<User> findAllUsers();
 
     User findUserById(Long id);

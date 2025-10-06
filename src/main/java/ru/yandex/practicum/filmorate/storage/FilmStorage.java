@@ -6,7 +6,9 @@ import java.util.Collection;
 
 public interface FilmStorage {
     Film create(final Film film);
+
     Film update(final Film newFilm);
+
     Collection<Film> findAllFilms();
 
     Film findFilmById(Long id);

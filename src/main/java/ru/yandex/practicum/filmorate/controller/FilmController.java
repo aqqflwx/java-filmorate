@@ -60,18 +60,22 @@ public final class FilmController {
     private void validateFilm(final Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             log.warn("Пустое название фильма");
-            throw new ValidationException( "Название фильма не может быть пустым");
+            throw new ValidationException("Название фильма не может быть пустым");
         }
         final String desc = film.getDescription();
         if (desc != null && desc.length() > Film.MAX_DESCRIPTION_LEN) {
             log.warn("Слишком длинное описание: {}", desc.length());
-            throw new ValidationException( "Описание фильма не может быть больше " + Film.MAX_DESCRIPTION_LEN + " символов" );
-        } if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(Film.EARLIEST_RELEASE_DATE)) {
+            throw new ValidationException("Описание фильма не может быть больше " + Film.MAX_DESCRIPTION_LEN + " символов");
+        }
+
+        if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(Film.EARLIEST_RELEASE_DATE)) {
             log.warn("Дата релиза раньше допустимой");
-            throw new ValidationException( "Дата релиза фильма должна быть не раньше 28.12.1895" );
-        } if (film.getDuration() == null || film.getDuration() <= 0) {
+            throw new ValidationException("Дата релиза фильма должна быть не раньше 28.12.1895");
+        }
+
+        if (film.getDuration() == null || film.getDuration() <= 0) {
             log.warn("Неположительная длительность: {}", film.getDuration());
-            throw new ValidationException( "Продолжительность фильма должна " + "быть положительным числом (> 0)" );
+            throw new ValidationException("Продолжительность фильма должна " + "быть положительным числом (> 0)");
         }
     }
 }
