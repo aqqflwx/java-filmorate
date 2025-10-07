@@ -6,11 +6,14 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 public class Film {
 
     public static final int MAX_DESCRIPTION_LEN = 200;
+    public static final LocalDate EARLIEST_RELEASE_DATE = LocalDate
+            .of(1895, 12, 28);
 
     private Long id;
 
@@ -27,4 +30,7 @@ public class Film {
 
     @Positive(message = "Продолжительность фильма должна быть > 0")
     private Integer duration;
+
+    private Set<Long> likes;
+
 }
