@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.impl.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.impl.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -14,31 +14,47 @@ import java.util.Comparator;
 @Service
 @RequiredArgsConstructor
 public class FilmService {
-    private final InMemoryFilmStorage inMemoryFilmStorage;
-    private final InMemoryUserStorage inMemoryUserStorage;
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
+
+    public Collection<Film> findAllFilms() {
+        return filmStorage.findAllFilms();
+    }
+
+    public Film findFilmById(Long id) {
+        return filmStorage.findFilmById(id);
+    }
+
+    public Film create(Film film) {
+        return filmStorage.create(film);
+    }
+
+    public Film update(final Film newFilm) {
+        return filmStorage.update(newFilm);
+    }
 
     public void addLike(Long id, Long userId) {
-        if (!inMemoryFilmStorage.getFilms().containsKey(id)) {
+        if (!filmStorage.getFilms().containsKey(id)) {
             throw new NotFoundException("Фильма с таким ID не существует");
         }
 
-        if (!inMemoryUserStorage.getUsers().containsKey(userId)) {
+        if (!userStorage.getUsers().containsKey(userId)) {
             throw new NotFoundException("Ошибка ввода! Пользователя с таким ID не существует");
         }
 
-        inMemoryFilmStorage.findFilmById(id).getLikes().add(userId);
+        filmStorage.findFilmById(id).getLikes().add(userId);
     }
 
     public void removeLike(Long id, Long userId) {
-        if (!inMemoryFilmStorage.getFilms().containsKey(id)) {
+        if (!filmStorage.getFilms().containsKey(id)) {
             throw new NotFoundException("Фильма с таким ID не существует");
         }
 
-        if (!inMemoryUserStorage.getUsers().containsKey(userId)) {
+        if (!userStorage.getUsers().containsKey(userId)) {
             throw new NotFoundException("Ошибка ввода! Пользователя с таким ID не существует");
         }
 
-        inMemoryFilmStorage.findFilmById(id).getLikes().remove(userId);
+        filmStorage.findFilmById(id).getLikes().remove(userId);
     }
 
     public Collection<Film> topFilmsByLikes(Integer count) {
@@ -51,11 +67,12 @@ public class FilmService {
             throw new ValidationException("Параметр 'count' должен быть не меньше 1!");
         }
 
-        return inMemoryFilmStorage.getFilms().values().stream()
+        return filmStorage.getFilms().values().stream()
                 .sorted(Comparator.<Film>comparingInt(
                         f -> f.getLikes() == null ? 0 : f.getLikes().size()
                 ).reversed())
                 .limit(count)
                 .toList();
     }
+
 }

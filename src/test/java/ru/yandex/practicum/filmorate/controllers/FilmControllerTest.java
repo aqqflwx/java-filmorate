@@ -6,6 +6,8 @@ import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.storage.impl.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.impl.InMemoryUserStorage;
 
@@ -19,10 +21,10 @@ class FilmControllerTest {
 
     @BeforeEach
     void setUp() {
-        InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
-        InMemoryUserStorage userStorage = new InMemoryUserStorage();
+        FilmStorage filmStorage = new InMemoryFilmStorage();
+        UserStorage userStorage = new InMemoryUserStorage();
         FilmService filmService = new FilmService(filmStorage, userStorage);
-        controller = new FilmController(filmStorage, filmService);
+        controller = new FilmController(filmService);
     }
 
     private Film validFilm() {
