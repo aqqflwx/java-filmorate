@@ -36,7 +36,12 @@ public class InMemoryUserStorage implements UserStorage {
             user.setName(user.getLogin());
         }
         user.setId(getNextId());
-        user.setFriends(new HashSet<>());
+        if (user.getFriends() == null) {
+            user.setFriends(new HashSet<>());
+        }
+        if (user.getFriendRequests() == null) {
+            user.setFriendRequests(new HashSet<>());
+        }
         users.put(user.getId(), user);
         log.info("Добавление пользователя было успешно выполнено");
         return user;
@@ -54,6 +59,12 @@ public class InMemoryUserStorage implements UserStorage {
         }
         if (newUser.getName() == null || newUser.getName().isBlank()) {
             newUser.setName(newUser.getLogin());
+        }
+        if (newUser.getFriends() == null) {
+            newUser.setFriends(new HashSet<>());
+        }
+        if (newUser.getFriendRequests() == null) {
+            newUser.setFriendRequests(new HashSet<>());
         }
         users.put(newUser.getId(), newUser);
         log.info("Пользователь с ID: {} был обновлен", newUser.getId());

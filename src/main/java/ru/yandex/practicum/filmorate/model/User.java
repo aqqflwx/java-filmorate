@@ -23,5 +23,6 @@ public class User {
     private LocalDate birthday;
 
     private Set<Long> friends;
+    private Set<Long> friendRequests;
 
 }
