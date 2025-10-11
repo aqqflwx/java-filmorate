@@ -23,7 +23,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         film.setId(getNextId());
-        film.setLikes(new HashSet<>());
+        if (film.getLikes() == null) {
+            film.setLikes(new HashSet<>());
+        }
+        if (film.getGenres() == null) {
+            film.setGenres(new HashSet<>());
+        }
         films.put(film.getId(), film);
         log.info("Добавление фильма было успешно выполнено");
         return film;
