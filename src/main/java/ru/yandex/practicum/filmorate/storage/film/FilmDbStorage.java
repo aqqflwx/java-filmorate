@@ -127,11 +127,10 @@ public class FilmDbStorage implements FilmStorage {
     private void replaceGenres(long filmId, Set<Genre> genres) {
         jdbc.update("DELETE FROM film_genre WHERE film_id=?", filmId);
         if (genres == null || genres.isEmpty()) return;
-        // remove duplicates and keep order by id
         List<Genre> list = genres.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Genre::getId, g -> g, (a, b) -> a, TreeMap::new))
-                .values().stream().toList();
+                .values().stream().distinct().toList();
         String sql = "INSERT INTO film_genre(film_id, genre_id) VALUES (?,?)";
         jdbc.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override

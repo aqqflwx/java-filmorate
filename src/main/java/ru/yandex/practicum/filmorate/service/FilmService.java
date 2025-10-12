@@ -35,14 +35,17 @@ public class FilmService {
         if (mpaStorage.getById(film.getMpa().getId()).isEmpty()) {
             throw new NotFoundException("Ошибка ввода! MPA с таким ID не существует");
         }
-        Set<Integer> allGenres = genreStorage.findAll().stream()
-                .map(Genre::getId)
-                .collect(Collectors.toSet());
-        Set<Integer> filmGenres = film.getGenres().stream()
-                .map(Genre::getId)
-                .collect(Collectors.toSet());
-        if (!allGenres.containsAll(filmGenres)) {
-            throw new NotFoundException("Ошибка ввода! Жанра с таким ID не существует");
+
+        if (film.getGenres() != null) {
+            Set<Integer> allGenres = genreStorage.findAll().stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+            Set<Integer> filmGenres = film.getGenres().stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+            if (!allGenres.containsAll(filmGenres)) {
+                throw new NotFoundException("Ошибка ввода! Жанра с таким ID не существует");
+            }
         }
         return filmStorage.create(film);
     }
