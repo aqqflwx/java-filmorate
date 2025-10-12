@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +30,9 @@ public class UserService {
     }
 
     public User update(User newUser) {
+        if (findUserById(newUser.getId()) == null) {
+            throw new NotFoundException("Пользователя с ID " + newUser.getId() + " не существует");
+        }
         return userStorage.update(newUser);
     }
 
@@ -46,8 +50,7 @@ public class UserService {
             throw new NotFoundException("Пользователя с ID " + friendId + " не существует");
         }
 
-        userStorage.findUserById(id).getFriends().add(friendId);
-        userStorage.findUserById(friendId).getFriends().add(id);
+        userStorage.addFriend(id, friendId);
     }
 
     public void removeFriend(Long id, Long friendId) {
@@ -56,8 +59,7 @@ public class UserService {
             throw new NotFoundException("Проверьте корректность ввода! Пользователя не существует");
         }
 
-        userStorage.findUserById(id).getFriends().remove(friendId);
-        userStorage.findUserById(friendId).getFriends().remove(id);
+        userStorage.removeFriend(id, friendId);
     }
 
     public Collection<User> listFriends(Long id) {
@@ -69,7 +71,9 @@ public class UserService {
             throw new NotFoundException("Этого пользователя не существует!");
         }
 
-        Set<Long> listIdFriends = userStorage.findUserById(id).getFriends();
+        Set<Long> listIdFriends = userStorage.getFriends(id).stream()
+                .map(User::getId)
+                .collect(Collectors.toSet());
 
         return userStorage.getUsers().values().stream()
                 .filter(user -> listIdFriends.contains(user.getId()))
@@ -89,8 +93,12 @@ public class UserService {
             throw new NotFoundException("Пользователя с ID " + otherId + " не существует");
         }
 
-        Set<Long> listIdFriends = userStorage.findUserById(id).getFriends();
-        Set<Long> listOtherIdFriends = userStorage.findUserById(otherId).getFriends();
+        Set<Long> listIdFriends = userStorage.getFriends(id).stream()
+                .map(User::getId)
+                .collect(Collectors.toSet());
+        Set<Long> listOtherIdFriends = userStorage.getFriends(otherId).stream()
+                .map(User::getId)
+                .collect(Collectors.toSet());
 
         List<Long> mutualFriends = listIdFriends.stream()
                 .filter(listOtherIdFriends::contains)

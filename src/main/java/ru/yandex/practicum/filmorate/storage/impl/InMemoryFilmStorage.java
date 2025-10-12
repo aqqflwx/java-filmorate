@@ -8,10 +8,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 @Getter
 @Component
@@ -71,5 +68,25 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new NotFoundException("Фильма с таким ID не существует!");
         }
         return films.get(id);
+    }
+
+    @Override
+    public void addLike(long filmId, long userId) {
+
+    }
+
+    @Override
+    public void deleteLike(long filmId, long userId) {
+
+    }
+
+    @Override
+    public List<Film> getMostPopular(int count) {
+        return List.of();
+    }
+
+    @Override
+    public Set<Long> getLikes(long filmId) {
+        return Set.of();
     }
 }
