@@ -27,10 +27,39 @@ public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbc;
 
+    private static final String SQL_SELECT_MPA_BY_ID =
+            "SELECT mpa_id, name FROM mpa WHERE mpa_id=?";
+    private static final String SQL_SELECT_GENRES_BY_FILM_ID =
+            "SELECT g.genre_id, g.name FROM film_genre fg JOIN genre g ON g.genre_id=fg.genre_id WHERE fg.film_id=? ORDER BY g.genre_id";
+    private static final String SQL_SELECT_ALL_FILMS =
+            "SELECT film_id, name, description, release_date, duration, mpa_id FROM films ORDER BY film_id";
+    private static final String SQL_SELECT_FILM_BY_ID =
+            "SELECT film_id, name, description, release_date, duration, mpa_id FROM films WHERE film_id=?";
+    private static final String SQL_INSERT_FILM =
+            "INSERT INTO films(name, description, release_date, duration, mpa_id) VALUES (?,?,?,?,?)";
+    private static final String SQL_UPDATE_FILM =
+            "UPDATE films SET name=?, description=?, release_date=?, duration=?, mpa_id=? WHERE film_id=?";
+    private static final String SQL_DELETE_FILM_GENRES_BY_FILM_ID =
+            "DELETE FROM film_genre WHERE film_id=?";
+    private static final String SQL_INSERT_FILM_GENRE =
+            "INSERT INTO film_genre(film_id, genre_id) VALUES (?,?)";
+    private static final String SQL_MERGE_FILM_LIKE =
+            "MERGE INTO film_likes(film_id, user_id) KEY(film_id, user_id) VALUES (?, ?)";
+    private static final String SQL_DELETE_FILM_LIKE =
+            "DELETE FROM film_likes WHERE film_id=? AND user_id=?";
+    private static final String SQL_SELECT_MOST_POPULAR =
+            "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_id " +
+                    "FROM films f LEFT JOIN film_likes l ON f.film_id=l.film_id " +
+                    "GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_id " +
+                    "ORDER BY COUNT(l.user_id) DESC, f.film_id " +
+                    "LIMIT ?";
+    private static final String SQL_SELECT_LIKES_BY_FILM_ID =
+            "SELECT user_id FROM film_likes WHERE film_id=?";
+
     private Mpa loadMpa(Integer id) {
         if (id == null) return null;
         try {
-            Map<String, Object> row = jdbc.queryForMap("SELECT mpa_id, name FROM mpa WHERE mpa_id=?", id);
+            Map<String, Object> row = jdbc.queryForMap(SQL_SELECT_MPA_BY_ID, id);
             return new Mpa(((Number) row.get("mpa_id")).intValue(), (String) row.get("name"));
         } catch (EmptyResultDataAccessException ex) {
             return null;
@@ -38,8 +67,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private Set<Genre> loadGenres(long filmId) {
-        String sql = "SELECT g.genre_id, g.name FROM film_genre fg JOIN genre g ON g.genre_id=fg.genre_id WHERE fg.film_id=? ORDER BY g.genre_id";
-        List<Map<String, Object>> rows = jdbc.queryForList(sql, filmId);
+        List<Map<String, Object>> rows = jdbc.queryForList(SQL_SELECT_GENRES_BY_FILM_ID, filmId);
         Set<Genre> res = new LinkedHashSet<>();
         for (Map<String, Object> r : rows) {
             res.add(new Genre(((Number) r.get("genre_id")).intValue(), (String) r.get("name")));
@@ -65,8 +93,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Collection<Film> findAllFilms() {
-        String sql = "SELECT film_id, name, description, release_date, duration, mpa_id FROM films ORDER BY film_id";
-        List<Map<String, Object>> rows = jdbc.queryForList(sql);
+        List<Map<String, Object>> rows = jdbc.queryForList(SQL_SELECT_ALL_FILMS);
         List<Film> result = new ArrayList<>();
         for (Map<String, Object> r : rows) {
             result.add(mapFilm(r));
@@ -76,9 +103,8 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film findFilmById(Long id) {
-        String sql = "SELECT film_id, name, description, release_date, duration, mpa_id FROM films WHERE film_id=?";
         try {
-            Map<String, Object> row = jdbc.queryForMap(sql, id);
+            Map<String, Object> row = jdbc.queryForMap(SQL_SELECT_FILM_BY_ID, id);
             return mapFilm(row);
         } catch (EmptyResultDataAccessException ex) {
             return null;
@@ -93,10 +119,9 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film create(Film film) {
-        String sql = "INSERT INTO films(name, description, release_date, duration, mpa_id) VALUES (?,?,?,?,?)";
         KeyHolder kh = new GeneratedKeyHolder();
         jdbc.update(con -> {
-            PreparedStatement ps = con.prepareStatement(sql, new String[]{"film_id"});
+            PreparedStatement ps = con.prepareStatement(SQL_INSERT_FILM, new String[]{"film_id"});
             ps.setString(1, film.getName());
             ps.setString(2, film.getDescription());
             ps.setDate(3, film.getReleaseDate() == null ? null : Date.valueOf(film.getReleaseDate()));
@@ -112,8 +137,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film update(Film film) {
-        String sql = "UPDATE films SET name=?, description=?, release_date=?, duration=?, mpa_id=? WHERE film_id=?";
-        jdbc.update(sql,
+        jdbc.update(SQL_UPDATE_FILM,
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate() == null ? null : Date.valueOf(film.getReleaseDate()),
@@ -125,14 +149,13 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void replaceGenres(long filmId, Set<Genre> genres) {
-        jdbc.update("DELETE FROM film_genre WHERE film_id=?", filmId);
+        jdbc.update(SQL_DELETE_FILM_GENRES_BY_FILM_ID, filmId);
         if (genres == null || genres.isEmpty()) return;
         List<Genre> list = genres.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Genre::getId, g -> g, (a, b) -> a, TreeMap::new))
                 .values().stream().distinct().toList();
-        String sql = "INSERT INTO film_genre(film_id, genre_id) VALUES (?,?)";
-        jdbc.batchUpdate(sql, new BatchPreparedStatementSetter() {
+        jdbc.batchUpdate(SQL_INSERT_FILM_GENRE, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 ps.setLong(1, filmId);
@@ -146,30 +169,22 @@ public class FilmDbStorage implements FilmStorage {
         });
     }
 
-    // ----- Likes & Popular -----
     public void addLike(long filmId, long userId) {
-        String sql = "MERGE INTO film_likes(film_id, user_id) KEY(film_id, user_id) VALUES (?, ?)";
-        jdbc.update(sql, filmId, userId);
+        jdbc.update(SQL_MERGE_FILM_LIKE, filmId, userId);
     }
 
     public void deleteLike(long filmId, long userId) {
-        jdbc.update("DELETE FROM film_likes WHERE film_id=? AND user_id=?", filmId, userId);
+        jdbc.update(SQL_DELETE_FILM_LIKE, filmId, userId);
     }
 
     public List<Film> getMostPopular(int count) {
-        String sql = "SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_id " +
-                "FROM films f LEFT JOIN film_likes l ON f.film_id=l.film_id " +
-                "GROUP BY f.film_id, f.name, f.description, f.release_date, f.duration, f.mpa_id " +
-                "ORDER BY COUNT(l.user_id) DESC, f.film_id " +
-                "LIMIT ?";
-        List<Map<String, Object>> rows = jdbc.queryForList(sql, count);
+        List<Map<String, Object>> rows = jdbc.queryForList(SQL_SELECT_MOST_POPULAR, count);
         List<Film> res = new ArrayList<>();
         for (Map<String, Object> r : rows) res.add(mapFilm(r));
         return res;
     }
 
     public Set<Long> getLikes(long filmId) {
-        String sql = "SELECT user_id FROM film_likes WHERE film_id=?";
-        return new LinkedHashSet<>(jdbc.query(sql, (rs, rowNum) -> rs.getLong("user_id"), filmId));
+        return new LinkedHashSet<>(jdbc.query(SQL_SELECT_LIKES_BY_FILM_ID, (rs, rowNum) -> rs.getLong("user_id"), filmId));
     }
 }

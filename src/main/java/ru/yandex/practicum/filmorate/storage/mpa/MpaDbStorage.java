@@ -16,18 +16,23 @@ public class MpaDbStorage implements MpaStorage {
 
     private final JdbcTemplate jdbc;
 
+    private static final String SQL_SELECT_ALL_MPA =
+            "SELECT mpa_id, name FROM mpa ORDER BY mpa_id";
+    private static final String SQL_SELECT_MPA_BY_ID =
+            "SELECT mpa_id, name FROM mpa WHERE mpa_id=?";
+
     private final RowMapper<Mpa> mapper = (rs, rowNum) ->
             new Mpa(rs.getInt("mpa_id"), rs.getString("name"));
 
     @Override
     public List<Mpa> findAll() {
-        return jdbc.query("SELECT mpa_id, name FROM mpa ORDER BY mpa_id", mapper);
+        return jdbc.query(SQL_SELECT_ALL_MPA, mapper);
     }
 
     @Override
     public Optional<Mpa> getById(int id) {
         try {
-            Mpa m = jdbc.queryForObject("SELECT mpa_id, name FROM mpa WHERE mpa_id=?", mapper, id);
+            Mpa m = jdbc.queryForObject(SQL_SELECT_MPA_BY_ID, mapper, id);
             return Optional.ofNullable(m);
         } catch (EmptyResultDataAccessException ex) {
             return Optional.empty();

@@ -32,7 +32,7 @@ public class FilmService {
     }
 
     public Film create(Film film) {
-        if (mpaStorage.getById(film.getMpa().getId()).isEmpty()) {
+        if (film.getMpa() != null && mpaStorage.getById(film.getMpa().getId()).isEmpty()) {
             throw new NotFoundException("Ошибка ввода! MPA с таким ID не существует");
         }
 
