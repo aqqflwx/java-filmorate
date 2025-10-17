@@ -21,7 +21,7 @@ class UserControllerTest {
     void setUp() {
         UserStorage userStorage = new InMemoryUserStorage();
         UserService userService = new UserService(userStorage);
-        controller  = new UserController(userService);
+        controller = new UserController(userService);
     }
 
     private User validUser() {
