@@ -8,7 +8,10 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 @Getter
 @Slf4j
@@ -80,20 +83,5 @@ public class InMemoryUserStorage implements UserStorage {
             throw new NotFoundException("Пользователя с таким ID не существует!");
         }
         return users.get(id);
-    }
-
-    @Override
-    public void addFriend(long userId, long friendId) {
-
-    }
-
-    @Override
-    public void removeFriend(long userId, long friendId) {
-
-    }
-
-    @Override
-    public List<User> getFriends(long userId) {
-        return List.of();
     }
 }
